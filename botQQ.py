@@ -10,8 +10,11 @@ import botFun
 
 def getAuthorization(params, timestamp):
     # 密钥参数
-    secret_id = "AKIDW3akqpoJj2ETcfdVXTL4mQyxsiWHvSsC"
-    secret_key = "JWcdYN6hHnGdytlEbs4EID9vbTevlR0Y"
+    secret_id = os.environ.get("TENCENTCLOUD_SECRET_ID")
+    secret_key = os.environ.get("TENCENTCLOUD_SECRET_KEY")
+
+    print(os.environ.keys)
+    print(secret_key)
 
     service = "ims"
     host = "ims.tencentcloudapi.com"
