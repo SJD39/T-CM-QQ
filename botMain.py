@@ -12,6 +12,7 @@ import time
 import botFun
 import botQQ
 import botRecord
+import MiraiDP
 
 groups = [
     681464620

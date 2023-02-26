@@ -13,7 +13,7 @@ def getAuthorization(params, timestamp):
     secret_id = os.environ.get("TENCENTCLOUD_SECRET_ID")
     secret_key = os.environ.get("TENCENTCLOUD_SECRET_KEY")
 
-    print(os.environ.keys)
+    print(secret_id)
     print(secret_key)
 
     service = "ims"
