@@ -14,69 +14,51 @@ import botQQ
 import botRecord
 import MiraiDP
 
-groups = [
-    681464620
-]
-
 executor = ThreadPoolExecutor(10)
 app = Flask(__name__)
 
-
 def run(backJson):
-    # 只保留群信息
-    if backJson['type'] != "GroupMessage":
+    # 预处理数据
+    backJson = MiraiDP.MDP(backJson)
+    if backJson == None:
         return ""
-
-    # 如果群号不在列表内
-    if backJson['sender']['group']['id'] not in groups:
-        return ""
+    backJson = json.loads(backJson)
 
     # 遍历信息内图片
     result = []
-    for messageChain in backJson['messageChain']:
+    for message in backJson['messages']:
         # 如果不是图片或者聊天记录
-        if messageChain['type'] != "Image" and messageChain['type'] != "Forward":
+        if message['type'] != "Image":
             continue
 
-        if messageChain['type'] == "Image":
+        if message['type'] == "Image":
             # 检测图片
-            malice, info, data = botQQ.checkImg(messageChain['url'])
+            malice, info, data = botQQ.checkImg(message['url'])
             if malice == True:
                 result.append(info)
-
-        if messageChain['type'] == "Forward":
-            # 检测转发聊天图片
-            for node in messageChain['nodeList']:
-                for nodeMessageChain in node['messageChain']:
-                    if nodeMessageChain['type'] != "Image":
-                        continue
-                    # 检测图片
-                    malice, info, data = botQQ.checkImg(nodeMessageChain['url'])
-                    if malice == True:
-                        result.append(info)
 
     if result == []:
         return ""
 
     botFun.sendGroupMessage(
-        backJson['sender']['group']['id'], 
+        backJson['group']['id'], 
         [{"type": "Plain", "text": '\n'.join(result)}], 
-        backJson['messageChain'][0]['id']
+        backJson['info']['id']
     )
 
     botFun.recall(
-        backJson['sender']['group']['id'],
-        backJson['messageChain'][0]['id']
+        backJson['group']['id'],
+        backJson['info']['id']
     )
 
     # 用户记录    
     botRecord.setRecord(
-        backJson['sender']['group']['id'], 
+        backJson['group']['id'], 
         backJson['sender']['id'], 
         "violation",
         int(
             botRecord.readRecord(
-                backJson['sender']['group']['id'], 
+                backJson['group']['id'], 
                 backJson['sender']['id'], 
                 "violation"
             )
@@ -86,14 +68,14 @@ def run(backJson):
     )
 
     temp = botRecord.readRecord(
-        backJson['sender']['group']['id'], 
+        backJson['group']['id'], 
         backJson['sender']['id'], 
         "info"
     )
     temp.append(result)
 
     botRecord.setRecord(
-        backJson['sender']['group']['id'], 
+        backJson['group']['id'], 
         backJson['sender']['id'], 
         "info",
         temp
@@ -107,6 +89,7 @@ def main():
     backJson = json.loads(request.get_data())
     print("----------------------------------------------------")
     print(backJson)
+    
     # executor.submit(run(backJson))
     run(backJson)
     return ""
